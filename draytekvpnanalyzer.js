@@ -45,32 +45,36 @@ readByLine(filename, (line) => {
 		line = line.substring(line.indexOf('>') + 1);
 
 	var fields = line.split(' ');
-	var vpnfields = fields[4]
-		.replace(/\]$/, '')
-		.replace(/^\[/, '')
-		.split('][');
 
-	if (vpnfields[2] === 'SSLTunnel') {
-		var dateStr = fields.slice(0, 3).join(' ');
-		var date = new Date(dateStr);
-		var state = vpnfields[1];
-		var user = vpnfields[3].replace(/^\@/, '');
+	if (fields.length >= 5) {
+		var vpnfields = fields[4]
+			.replace(/\]$/, '')
+			.replace(/^\[/, '')
+			.split('][');
 
-		if (state === 'UP') {
-			var sess = userSessions[user];
-			if (sess) endUserSession(date, sess);
+		if (vpnfields.length >= 4) {
+			var protocol = vpnfields[2];
+			var dateStr = fields.slice(0, 3).join(' ');
+			var date = new Date(dateStr);
+			var state = vpnfields[1];
+			var user = vpnfields[3].replace(/^\@/, '').replace(/^.*?\:/, '');
 
-			userSessions[user] = {
-				dateStr: dateStr,
-				date: date,
-				user: user,
-				duration: null
-			};
-		} else if (state === 'DOWN') {
-			var sess = userSessions[user];
-			if (sess) endUserSession(date, sess);
+			if (state === 'UP') {
+				var sess = userSessions[user];
+				if (sess) endUserSession(date, sess);
 
-			userSessions[user] = null;
+				userSessions[user] = {
+					dateStr: dateStr,
+					date: date,
+					user: user,
+					duration: null
+				};
+			} else if (state === 'DOWN') {
+				var sess = userSessions[user];
+				if (sess) endUserSession(date, sess);
+
+				userSessions[user] = null;
+			}
 		}
 	}
 });
